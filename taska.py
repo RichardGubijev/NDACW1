@@ -13,10 +13,10 @@ filepath = "datasets/WIKIPROJECTS.csv"
 threadDictionary = {} #{pagename/thread: username, username}
 
 with open(filepath, "r", encoding="utf-8") as file:
-    file.readline() # Skip heading line
-    for line in file: 
-        row = line.replace("\n","").split(",")
-        key = f"{row[0]}/{row[2]}"
+    csv_reader = csv.reader(file, delimiter=',', quotechar='"')
+    next(csv_reader)
+    for row in csv_reader: 
+        key = f"{row[0]}/{row[2]}".replace("\n","")
         if threadDictionary.get(key) is None:
             threadDictionary[key] = [row[1]]
         else:
@@ -33,5 +33,5 @@ for key in threadDictionary.keys():
                 if userList[i] == userList[x]:
                     print(userList)
 
-nx.draw(G, with_labels = False)
+nx.draw(G, with_labels = True)
 plt.show()
