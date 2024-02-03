@@ -1,0 +1,21 @@
+# Needed for Jupyter
+ipykernel
+jupyterlab
+
+# Libraries for plotting
+bokeh
+seaborn
+matplotlib
+
+# Data/vector processing
+numpy
+pandas
+
+# Network data libraries
+networkx
+spaghetti
+ndlib
+
+# Provenance libraries
+prov
+provstore-api
