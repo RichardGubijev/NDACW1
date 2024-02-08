@@ -16,6 +16,9 @@ def print_graph_properties(graph, title):
     print(f'Graph {title} high level Statistics')
     print_high_level_statistics(graph)
 
+    print(f'Graph {title} node level descriptors')
+    show_node_level_descriptors(graph)
+
 
 # General statistics
 def print_graph_statistics(graph):
@@ -48,7 +51,6 @@ def print_high_level_statistics(graph):
     print_graph_statistics(equivalent_random)
 
     
-
 def get_equivalent_random_graph(graph):
     # n : number of nodes
     # p : frequency of edge occurence
@@ -60,6 +62,30 @@ def get_equivalent_random_graph(graph):
     p = number_edges/max_edges
 
     return np.erdos_renyi_graph(n=n, p=p)
+
+# *graph and title should be a tuple
+def show_node_level_descriptors(*graph_and_title):
+    graphs, titles = [ [graph] [title] for graph, title in graph_and_title]
+    
+    descriptors = [get_node_level_descriptors(graph) for graph in graphs]
+
+    plot_helper_node_level_descriptors(descriptors, titles, 'degrees')
+    plot_helper_node_level_descriptors(descriptors, titles, 'clustering coefficients')
+    plot_helper_node_level_descriptors(descriptors, titles, 'closenes centrality')
+    
+
+#get the description
+def get_node_level_descriptors(graph):
+    degrees = [d for _, d in graph.degree()]
+    ccoeffs = [d for _, d in nx.algorithms.cluster.clustering(graph).items()]
+    ccentra = [d for _, d in nx.closeness_centrality(graph).items()]
+
+    return {'degrees': degrees, 'clustering coefficients': ccoeffs, 'closenes centrality': ccentra}
+
+#plot the differences between the graphs
+def plot_helper_node_level_descriptors(descriptors, titles, key):
+    data = {titles[i]: descriptors[i][key] for i in range(len(titles))}
+    sns.displot(data, height=4, aspect=2)
 
 # If we want to plot the graph
 def bokeh_plot_simple(graph, title, crop_factors = None):
