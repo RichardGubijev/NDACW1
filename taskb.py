@@ -39,14 +39,21 @@ def print_graph_statistics(graph):
     except:  # an error has  occurred
         print("\nERROR: Could not compute the diameter of the graph.")
 
-# Compare with a random graph to get
-        # degree distribution
-        # diameter
+# Largest component
 def print_high_level_statistics(graph):
     largest_component = max(nx.connected_components(graph), key=len)
     graph_largest_components = graph.subgraph(largest_component)
     print_graph_statistics(graph_largest_components)
+    # Could to for all components
+    # for i, conn_component in enumerate(
+    #     nx.connected_components(graph)):
+    #     print(f"[Graph component {i}]")
+    #     sub_graph = graph.subgraph(conn_component)  # XXX Careful to manupulations!
+    #     print_graph_statistics(sub_graph)
+    #     print("-"*50 + "\n")
 
+# Compare against a random graph
+def print_random_graph_comparison(graph):
     equivalent_random = get_equivalent_random_graph(graph)
     print_graph_statistics(equivalent_random)
 
@@ -77,6 +84,7 @@ def show_node_level_descriptors(*graph_and_title):
 #get the description
 def get_node_level_descriptors(graph):
     degrees = [d for _, d in graph.degree()]
+    degree_centrality = [d for _, d in nx.degree_centrality(graph).items()]
     ccoeffs = [d for _, d in nx.algorithms.cluster.clustering(graph).items()]
     ccentra = [d for _, d in nx.closeness_centrality(graph).items()]
 
@@ -106,3 +114,10 @@ def bokeh_plot_simple(graph, title, crop_factors = None):
     #output_file("networkx_graph.html")
     show(plot)
 
+
+
+
+#--------------------------
+    
+
+# Shortest Paths
