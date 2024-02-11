@@ -72,4 +72,4 @@ if __name__ == "__main__":
     print(f"Time taken to parse CSV into a graph  {G1time2 - G1time1}")
     print(f"Time taken to parse CSV into a graph2 {G2time2 - G2time1}")
     nx.draw(G1, with_labels = False)
-    #plt.savefig('REQUEST_FOR_DELETION')
+    #plt.show()
