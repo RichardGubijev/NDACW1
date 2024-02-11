@@ -39,17 +39,38 @@ def print_graph_statistics(graph):
     except:  # an error has  occurred
         print("\nERROR: Could not compute the diameter of the graph.")
 
+def print_connected_statistics_with_average_shortest_path(component):
+    print("Number of nodes: {}\nNumber of edges: {}".format(
+        component.number_of_nodes(), component.number_of_edges()
+    ))
+    print("Average path length: {}".format(
+    nx.average_shortest_path_length(component)
+    ))
+    print("Number of connected components: {}".format(
+        nx.algorithms.components.number_connected_components(component),
+    ))
+    print("Average degree: {}\nClustering coefficient: {}".format(
+        np.mean([deg for _, deg in component.degree]),
+        nx.algorithms.cluster.average_clustering(component)
+    ))
+
+    try:  # attempt to compute the diameter of the graph
+        diam = nx.algorithms.approximation.distance_measures.diameter(component)
+        print("Graph diameter: {}".format(diam))
+    except:  # an error has  occurred
+        print("\nERROR: Could not compute the diameter of the graph.")
+
 # Largest component
 def print_high_level_statistics(graph):
     largest_component = max(nx.connected_components(graph), key=len)
     graph_largest_components = graph.subgraph(largest_component)
-    print_graph_statistics(graph_largest_components)
-    # Could to for all components
+    print_connected_statistics_with_average_shortest_path(graph_largest_components)
+    #Could do for all components
     # for i, conn_component in enumerate(
     #     nx.connected_components(graph)):
     #     print(f"[Graph component {i}]")
     #     sub_graph = graph.subgraph(conn_component)  # XXX Careful to manupulations!
-    #     print_graph_statistics(sub_graph)
+    #     print_connected_component_statistics(sub_graph)
     #     print("-"*50 + "\n")
 
 # Compare against a random graph
