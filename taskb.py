@@ -5,6 +5,7 @@ from bokeh.io import output_file, show
 from bokeh.plotting import figure, from_networkx
 import seaborn as sns
 import matplotlib.pyplot as plt
+import pandas as pd
 
 # Note: these methods are largely taken from the lab sessions
 
@@ -205,5 +206,18 @@ def get_equivalent_regular_graph(graph:nx.Graph):
 # -----------------------
 
 # v) Two editors are connected iff they have both contributed to any thread in the same page, but not necessarily to the same thread? 
+# I.e. we would have more connections in the network
 
+def create_graph_connected_by_thread_in_same_page(network_data:str):
+    net = pd.read_csv('WIKIPROJECTS.csv')
 
+    page_to_editors = net.groupby('page_name')['username'].apply(set).to_dict()
+
+    net_graph = nx.Graph()
+
+    for editors in page_to_editors.values():
+        for editor_a in editors:
+            for editor_b in editors:
+                if editor_a != editor_b:
+                    if pd.notnull(editor_a) and pd.notnull(editor_b):
+                        net_graph.add_edge(editor_a, editor_b)
