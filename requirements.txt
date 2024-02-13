@@ -8,7 +8,7 @@ seaborn
 matplotlib
 
 # Data/vector processing
-numpy == 1.24
+numpy
 pandas
 
 # Network data libraries
