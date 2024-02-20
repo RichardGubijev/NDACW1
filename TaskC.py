@@ -1,153 +1,141 @@
 import networkx as nx
-import matplotlib.pyplot as plt
 from taska import parseWikiData
-from random import sample
-import statistics
-
-# TODO: fix up the histograms to only show the valid values for the x axis
-# We are doing cascade model BUT in addition, if a user has les degrees than average or median we do not allow that action to cascades degrees than average or median we do not allow that action to cascade
+import enum
+from helpers import get_neighbors, similarity_measure, get_2_random_nodes, calculate_stats, sorted_nodes
+import matplotlib.pyplot as plt
+from decimal import Decimal
 
 THRESHOLD = 0.8
-datasets = ['INTERWIKI_CONFLICT.csv', 'REQUEST_FOR_DELETION.csv', 'WIKIPROJECTS.csv']
-path = 'datasets/'
-# networks = [parseWikiData(path + datasets[0]), parseWikiData(path + datasets[1]), parseWikiData(path + datasets[2])]
-networks = [parseWikiData(path + datasets[1])]
-
-G = networks[0]
-
-def calculate_stats(G: nx.graph):
-    degrees = nx.degree(G)
-    degree_values = [deg[1] for deg in degrees]
-    return statistics.mean(degree_values), statistics.median(degree_values)
-
-def graph_degree_distribution_histogram(degrees):
-    degrees_count = {}
-    for i in degrees:
-        count = i[1]
-        if (count in degrees_count):
-            degrees_count[count] += 1
-        else:
-            degrees_count[count] = 1
-            
-    print(degrees_count.keys())
-    keys = list(degrees_count.keys())
-    values = list(degrees_count.values())
-    plt.bar(keys, values)
-    plt.xticks(keys)
-
-def sorted_nodes(G: nx.graph): 
-    degrees = nx.degree(G)
-    sorted_degrees = sorted(degrees, key= lambda x : x[1])
-    nodes = [node[0] for node in sorted_degrees]
-    return nodes
-
-def save_values_to_file(filename, values): 
-    value_string = ""
-    for value in values:
-        value_string += f","
-
-def get_2_random_nodes(G: nx.graph):
-    degrees = list(nx.degree(G))
-    valid_nodes = []
-    for x in degrees:
-        if x[1] > 1:  # Show why this is abnormal -> median and histogram
-            valid_nodes.append(x[0])
-    
-    random_nodes = sample(valid_nodes, 2)
-    return random_nodes
-
-def get_2_well_connected(nodes):
-    return nodes[-2:]
-
-def get_2_not_well_connctd(nodes):
-    return nodes[:2]
-
-def get_degrees(degree_values, nodes):
-    for x in degree_values:
-        for n in nodes:
-            if n == x[0]:
-                print(x[1])
-
-def get_node_degree(G: nx.graph, node):
-    degrees = nx.degree(G)
-    for x in degrees:
-        if x[0] == node:
-            return x[1]
-
-def get_neighbors(G: nx.graph, node):
-    return list(G.neighbors(node))
-
-def infected_negibhors_ratio(infected_nodes, node_neghibors):
-    infected_nodes = set(infected_nodes)
-    node_neghibors = set(node_neghibors)
-    return len(infected_nodes & node_neghibors) / len(node_neghibors)
 
 
-degrees = dict(nx.degree(G))
-
-def cascasde(G:nx.graph, infected_nodes: list, exclusion_theshold: int):
-    for node in infected_nodes:
-        for x in get_neighbors(G, node):
-            if x in infected_nodes:
-                pass
-            elif degrees[x] < exclusion_theshold:
-                pass
-            elif infected_negibhors_ratio(G.neighbours(node), G.neighbors(x)) >= THRESHOLD:
-                infected_nodes.append(x)
-    return infected_nodes
+class Stats(enum.Enum):
+    MEAN = 1
+    MEDIAN = 2
 
 
-# print(graph_degree_distribution_histogram(G.degree()))
+class TaskC:
+    def __init__(self, G: nx.graph) -> None:
+        self.G = G
+        self.mean, self.median = calculate_stats(G)
+        self.degrees = dict(nx.degree(G))
+        self.sorted_nodes = sorted_nodes(G)
+        self.random_nodes = get_2_random_nodes(G)
 
-# TODO refine spread critera to ans question 1
-    #! get the shortest path to the max node 
-    #! get average path to the max node? is the shortest path close?
-# TODO Create a priority list from the cascade to investigate whether they are trolls
-    #! Maybe with shortest path to early adopters or amount of neighbors connected which are infected?
-    #! Or look at the max degree here as well
-    
-# networkx.classes.reportviews.DegreeView
-# something:  nx.classes.reportviews.DegreeView = nx.degree(G)
-# degree_values = something.
-# nodes = sorted_nodes(G)
+    def node_similarity(self, current_node_neighbours: list) -> dict:
+        node_similarity = {}
+        for neighbouring_node in current_node_neighbours:
+            neighbouring_node_neighbours = get_neighbors(G, neighbouring_node)
+            node_similarity[neighbouring_node] = {
+                'similarity': similarity_measure(current_node_neighbours, neighbouring_node_neighbours),
+                'degree': len(neighbouring_node_neighbours),
+                'neighbors': neighbouring_node_neighbours,
+            }
+        return node_similarity
+
+    def question_one(self, stat_measure) -> dict:
+        random_node_neighbours = {}
+        for node in self.random_nodes:
+            random_node_neighbours[node] = get_neighbors(self.G, node)
+        node_similarity = {}
+        for n in random_node_neighbours:
+            current_node_neighbours = get_neighbors(G, n)
+            if len(current_node_neighbours) > stat_measure:
+                node_similarity[n] = self.node_similarity(current_node_neighbours)
+        return node_similarity
+
+    def graph_question_one(self, node_similarity: dict, threshold: float, stat_measure):
+        G = nx.Graph()
+        for node in node_similarity:
+            G.add_node(node, color=0)
+            for neighbor in node_similarity[node]:
+                if node_similarity[node][neighbor]['degree'] > stat_measure: #and node_similarity[node][neighbor]['similarity'] > threshold:
+                    colour = 1
+                else:
+                    colour = 2
+                G.add_node(neighbor, color=colour)
+                G.add_edge(node, neighbor)
+
+                #! don't delete this, uncomment and see for yourself
+                # for next_neighbor in node_similarity[node][neighbor]['neighbors']:
+                #     if G.has_node(next_neighbor):
+                #         pass
+                #     else:
+                #         G.add_node(next_neighbor, color=3)
+                #     G.add_edge(neighbor, next_neighbor)
+
+        color_map = {0: 'yellow',     # initial node
+                     1: 'red',        # infected node
+                     2: 'lightgreen',  # not infected
+                     3: 'black'       # not considered
+        }
+        size_map = {0: 500,
+                    1: 300,
+                    2: 200,
+                    3: 5,
+
+        }
+
+        # Draw the graph with specific node colors and sizes
+        pos = nx.spring_layout(G)
+        nx.draw_networkx_edges(G, pos, width=0.5)  # Adjust the number as needed
+
+        # Draw the graph with specific node colors and sizes
+        nx.draw(G, pos, with_labels=False,
+                node_color=[color_map[G.nodes[node]['color']] for node in G.nodes],
+                node_size=[size_map[G.nodes[node]['color']] for node in G.nodes]
+                )
+
+        # Draw the red nodes again with smaller size and white color to create a "ring" effect
+        draw_black_nodes = [node for node in G.nodes if G.nodes[node]['color'] == 3]
+        nx.draw_networkx_nodes(G, pos, nodelist=draw_black_nodes, node_color='white',
+                               node_size=2)  # Adjust the number as needed
+
+        green_nodes = [node for node in G.nodes if G.nodes[node]['color'] == 2]
+        nx.draw_networkx_nodes(G, pos, nodelist=green_nodes, node_color='lightgreen',
+                               node_size=[size_map[G.nodes[node]['color']] for node in green_nodes])
+
+        red_node = [node for node in G.nodes if G.nodes[node]['color'] == 1]
+        nx.draw_networkx_nodes(G, pos, nodelist=red_node, node_color='red',
+                               node_size=[size_map[G.nodes[node]['color']] for node in red_node])
+
+        yellow_nodes = [node for node in G.nodes if G.nodes[node]['color'] == 0]
+        nx.draw_networkx_nodes(G, pos, nodelist=yellow_nodes, node_color='yellow',
+                               node_size=[size_map[G.nodes[node]['color']] for node in yellow_nodes])
+        plt.show()
 
 
-# well_connected = get_2_well_connected(nodes)
+    def question_two(self, node_similarity: dict):
+        priority = {}
+        for node in node_similarity:
+            new_dict = {}
+            for neighbour in node_similarity[node]:
+                similarity = Decimal(node_similarity[node][neighbour]['similarity'])
+                degree = Decimal(node_similarity[node][neighbour]['degree'])
+                new_dict[neighbour] = similarity * degree
+            priority[node] = sorted(new_dict.items(), reverse=True)
+        print(priority)
 
-# cascaded_nodes = cascasde(G, well_connected, 0.5, 3)
-# print(cascaded_nodes)
+    def run(self, threshold, stat_measure):
+        node_similarity = self.question_one(stat_measure)
+        self.graph_question_one(node_similarity, threshold, stat_measure)
 
-
-# import networkx as nx
-# import ndlib.models.ModelConfig as mc
-# import ndlib.models.epidemics as ep
-
-
-
-# model = ep.ThresholdModel(G)
-# cfg = mc.Configuration()
-
-# infected_nodes = set(get_2_random_nodes(G))
-# cfg.add_model_initial_configuration("Infected", infected_nodes)
-
-# def infection_chance(node, graph):
-#     neighbors = graph.neighbors(node)
-    
-#     value = infected_negibhors_ratio(neighbors, infected_nodes)
-#     if value > THRESHOLD:
-#         return 1
-#     else:
-#         return 0
-
-# for i in G.nodes():
-#     cfg.add_node_configuration("threshold", i, infection_chance(i, G))
-
-# model.set_initial_status(cfg)
+        self.question_two(node_similarity)
 
 
-# iterations = model.iteration_bunch(1)
-# node_status = iterations[0]["status"]
+if __name__ == "__main__":
+    datasets = ['INTERWIKI_CONFLICT.csv', 'REQUEST_FOR_DELETION.csv', 'WIKIPROJECTS.csv']
+    path = 'datasets/'
+    networks = [parseWikiData(path + datasets[0])]
+    G = networks[0]
+    tasks_c = TaskC(G)
+    threshold = 0.5
+    stat_measure = 1
+    tasks_c.run(threshold=threshold, stat_measure=stat_measure)
 
-# for key in node_status.key():
-#     if node_status[key] == 1:
-#         infected_nodes.append(key)
+
+# Demonstrated understanding of network data analysis concepts and how they can
+# apply to the questions in the coursework tasks.
+
+# Technical ability in using programming to tackle a data analytics problem, showing
+# ability to research and apply data manipulation techniques as required for the
+# problem.
