@@ -53,10 +53,13 @@ def _parseWikiDataFast_CURRENTLYBROKENDONOTUSE(filepath):
     return G
 
 def _helperFunc(userList, G):
-    if len(userList) != 1:
-            for i in range(0, len(userList) -1):
-                for x in range(i + 1, len(userList)):
-                        G.add_edge(userList[i], userList[x])
+
+    if len(userList) == 1:
+        G.add_node(userList[0])
+    else:
+        for i in range(0, len(userList) -1):
+            for x in range(i + 1, len(userList)):
+                    G.add_edge(userList[i], userList[x])
     return G
 
 if __name__ == "__main__":
