@@ -29,29 +29,6 @@ def parseWikiData(filepath):
 
     return G
 
-def _parseWikiDataFast_CURRENTLYBROKENDONOTUSE(filepath):
-    # This function exploits the fact that the CSV files are ordered by page name and thread subject
-    # So no need to create a dictionary
-    # CURRENTLY DOES NOT WORK, WHEN COMPARED TO THE OTHER FUNCTION IT DOES NOT RETURN AN ISOMORPHOIC FUNCTION
-
-    prevThreadSubject = ""
-    prevPageName = ""
-    userList = []
-    G = nx.Graph()
-
-    with open(filepath, "r", encoding="utf-8") as file:
-        csv_reader = csv.reader(file, delimiter=',', quotechar='"')
-        next(csv_reader) # Skip header line
-        for row in csv_reader:
-            if prevThreadSubject != row[0] or prevPageName != row[2]:
-                G = _helperFunc(userList, G)
-                userList = []
-                prevThreadSubject = row[0]
-                prevPageName = row[2]
-            userList.append(row[1])
-
-    return G
-
 def _helperFunc(userList, G):
     if len(userList) != 1:
             for i in range(0, len(userList) -1):
