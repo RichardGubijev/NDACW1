@@ -8,26 +8,15 @@ DEGREE_THRESHOLD = 10
 
 colours = ['yellow', '#F4D4D3', '#E9A8A1', '#E9635E', '#CA1414', '#6B0003', 'black']
 
-colour_map = {
-    0: colours[0],  # initial nodes
-    1: colours[1],  # 0 < similarity < 0.1
-    2: colours[2],  # 0.1 =< similarity < 0.2
-    3: colours[3],  # 0.3 =< similarity < 0.4
-    4: colours[4],  # 0.4 =< similarity < 0.5
-    5: colours[5],  # 0.5 =< similarity =< 1
-    6: colours[6],  # non infected neighbour
+colours_with_label = {
+    colours[0]: "infected",
+    colours[1]: "[0, 0.1)",
+    colours[2]: "[0.1, 0.2)",
+    colours[3]: "[0.3, 0.4)",
+    colours[4]: "[0.4, 0.5)",
+    colours[5]: "[0.5, 1]",
+    colours[6]: "not infected",
 }
-
-colour_labels = {
-    "node is infected": colours[0],
-    "0 < similarity < 0.1": colours[1],
-    "0.1 =< similarity < 0.2": colours[2],
-    "0.3 =< similarity < 0.4": colours[3],
-    "0.4 =< similarity < 0.5": colours[4],
-    "0.5 =< similarity =< 1": colours[5],
-    "non infected neighbour": colours[6],
-}
-
 
 def get_2_semi_random_nodes(graph: nx.graph, threshold: int) -> list:
     degrees = list(nx.degree(graph))
@@ -60,7 +49,7 @@ def calculate_transmission_risk(graph: nx.graph,
         path_length = nx.shortest_path_length(graph, infected_node, susceptible_node)
         similarity = calculate_jaccard_similarity(infected_node_neighbours,
                                                   susceptible_node_neighbours)
-        risk = similarity / path_length
+        risk = similarity / path_length   # division by zero
         return risk
     else:
         return 0.0  # No path, no risk
@@ -83,22 +72,22 @@ def get_risk_scores_of_valid_nodes(graph: nx.graph,
     return risk_scores
 
 
-def get_colour(similarity: float) -> int:
+def get_colour(similarity: float) -> str:
     if 0 <= similarity < 0.1:
-        return 1
+        return colours[1]
     elif 0.1 <= similarity < 0.2:
-        return 2
+        return colours[2]
     elif 0.2 <= similarity < 0.3:
-        return 3
+        return colours[3]
     elif 0.3 <= similarity < 0.4:
-        return 4
+        return colours[4]
     elif 0.4 <= similarity <= 1:
-        return 5
+        return colours[5]
 
 
 def generate_risk_graph(old_graph: nx.graph, nodes: dict, infected_nodes: list) -> nx.graph:
     graph = nx.Graph()
-    graph.add_nodes_from(infected_nodes, color=0)
+    graph.add_nodes_from(infected_nodes, color=colours[0])
     node_keys = set(nodes.keys())
     appended_nodes = set()
     for node in nodes:
@@ -115,31 +104,33 @@ def generate_risk_graph(old_graph: nx.graph, nodes: dict, infected_nodes: list) 
                             and next_elem not in infected_nodes
                             and next_elem not in appended_nodes):
                         appended_nodes.add(next_elem)
-                        graph.add_node(shortest_path[i + 1], color=6)
+                        graph.add_node(shortest_path[i + 1], color=colours[6])
                     graph.add_edge(shortest_path[i], shortest_path[i + 1])
     return graph
 
 
-def display_graph(graph: nx.Graph):
-    plt.figure(figsize=(15, 15))
+def display_graph(graph: nx.Graph) -> None:
+    plt.figure(figsize=(10, 10))
     layout = nx.random_layout(graph)
-    colors = [colour_map[graph.nodes[node]['color']] for node in graph.nodes]
+
+    colors = [graph.nodes[node]['color'] for node in graph.nodes]
     sizes = [500 if graph.nodes[node]['color'] == 0 else 300 for node in graph.nodes]
     nx.draw(graph, layout, node_color=colors, node_size=sizes, with_labels=False)
-    legend_handles = [mpatches.Patch(color=color, label=label) for label, color in colour_labels.items()]
-    plt.legend(handles=legend_handles)
+    patches = [plt.plot([],[], marker="o", ms=10, ls="", mec=None, color=colour,
+                label="{:s}".format(label))[0]  for colour, label in colours_with_label.items()]
+    plt.legend(handles=patches, loc='upper right')
     plt.show()
 
 
-def display_histogram(graph: nx.Graph):
+def display_histogram(graph: nx.Graph) -> None:
     colors = [graph.nodes[node]['color'] for node in graph.nodes]
     color_counts = {color: colors.count(color) for color in set(colors)}
-    color_labels = [colour_map[color] for color in color_counts.keys()]
+    color_labels = [colours_with_label[color] for color in color_counts.keys()]
     frequencies = list(color_counts.values())
     plt.figure(figsize=(10, 6))
-    bars = plt.bar(color_labels, frequencies, color=color_labels)
-    legend_handles = [mpatches.Patch(color=color, label=label) for label, color in colour_labels.items()]
-    plt.legend(handles=legend_handles)
+    plt.xlabel("similarity range", fontsize=12, fontweight='bold')
+    plt.ylabel("similar range occurrences", fontsize=12, fontweight='bold')
+    bars = plt.bar(color_labels, frequencies, color=list(color_counts.keys()))
     for bar in bars:
         yval = bar.get_height()
         plt.text(bar.get_x() + bar.get_width() / 2.0, yval, int(yval), va='bottom')
@@ -153,6 +144,7 @@ if __name__ == "__main__":
     G = networks[0]
 
     random_nodes = get_2_semi_random_nodes(G, 100)
+
     all_nodes = [node for node in G.nodes() if node not in random_nodes]
 
     risky_nodes = get_risk_scores_of_valid_nodes(G, random_nodes, all_nodes)
