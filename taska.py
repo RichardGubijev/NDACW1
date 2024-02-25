@@ -29,11 +29,13 @@ def parseWikiData(filepath):
 
     return G
 
-def _helperFunc(userList, G):
-    if len(userList) != 1:
+def _helperFunc(userList, G: nx.graph):
+    if len(userList) > 1:
             for i in range(0, len(userList) -1):
                 for x in range(i + 1, len(userList)):
                         G.add_edge(userList[i], userList[x])
+    elif len(userList) == 1:
+         G.add_node(userList[0])
     return G
 
 if __name__ == "__main__":
