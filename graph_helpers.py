@@ -66,3 +66,17 @@ def graph_degree_distribution_histogram(degrees):
     values = list(degrees_count.values())
     plt.bar(keys, values)
     plt.xticks(keys)
+
+
+def colour_count(graph: nx.graph) -> dict:
+    colour_dict = {}
+    for c in colours:
+        if c != colours[0] and c != colours[6]:
+            colour_dict[c] = 0
+    for node in graph.nodes:
+        if graph.nodes[node]['color'] != colours[0] and graph.nodes[node]['color'] != colours[6]:
+            if graph.nodes[node]['color'] not in colour_dict:
+                colour_dict[graph.nodes[node]['color']] = 1
+            else:
+                colour_dict[graph.nodes[node]['color']] += 1
+    return colour_dict
