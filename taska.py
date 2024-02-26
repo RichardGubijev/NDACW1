@@ -1,6 +1,4 @@
-import time
 import networkx as nx
-import matplotlib.pyplot as plt
 import csv
 
 def parseWikiData(filepath):
@@ -26,7 +24,8 @@ def parseWikiData(filepath):
     for key in threadDictionary.keys():
         userList = threadDictionary.get(key)
         G = _helperFunc(userList, G)
-
+        
+    print(len(threadDictionary.keys()))
     return G
 
 def _helperFunc(userList, G: nx.graph):
@@ -39,16 +38,44 @@ def _helperFunc(userList, G: nx.graph):
     return G
 
 if __name__ == "__main__":
-    filepath = "datasets/WIKIPROJECTS.csv"
-    filepath2 = "datasets/REQUEST_FOR_DELETION.csv"
-    G1time1 = time.time()
-    G1 = parseWikiData(filepath=filepath)
-    G1time2 = time.time()
-    G2time1 = time.time()
-    G2 = parseWikiData(filepath=filepath2)
-    G2time2 = time.time()
-    print(nx.is_isomorphic(G1, G2))
-    print(f"Time taken to parse CSV into a graph  {G1time2 - G1time1}")
-    print(f"Time taken to parse CSV into a graph2 {G2time2 - G2time1}")
-    nx.draw(G1, with_labels = False)
-    plt.show()
+    import os
+    import time
+    import matplotlib.pyplot as pt
+
+    node_quantity = []
+    edge_quantity = []
+    average_time_to_run = []
+    dataset_name = []
+
+    iterations = 1
+
+    relative_folder_path = 'datasets/'
+    file_names = [f for f in os.listdir(relative_folder_path) if os.path.isfile(os.path.join(relative_folder_path, f))]
+
+    for file in file_names:
+        total_time = 0.
+
+        for i in range(0, iterations):
+            start_time = time.time()
+            G = parseWikiData(relative_folder_path + file)
+            end_time = time.time()
+            total_time += end_time - start_time
+            if i == 0:
+                node_quantity.append(len(G.nodes))
+                edge_quantity.append(len(G.edges))
+                dataset_name.append(file)
+            del(G)        
+        average_time_to_run.append(total_time / iterations)
+
+    print("\n\n\n\n")
+    for i in range(0,len(node_quantity)):
+        #  print(f"{dataset_name[i]} | # of Nodes: {node_quantity[i]} | # of Nodes: {edge_quantity[i]} | Average time to run: {average_time_to_run[i]}")
+        # print(f"({edge_quantity[i] / 1000},{average_time_to_run[i]})")    
+        print(node_quantity[i])
+    print("\n\n\n\n")
+    for i in range(0,len(node_quantity)):
+        #  print(f"{dataset_name[i]} | # of Nodes: {node_quantity[i]} | # of Nodes: {edge_quantity[i]} | Average time to run: {average_time_to_run[i]}")
+        # print(f"({edge_quantity[i] / 1000},{average_time_to_run[i]})")    
+        print(average_time_to_run[i])
+    # print(f"{len(node_quantity)}{len(edge_quantity)}{len(dataset_name)}{len(average_time_to_run)}")
+    
