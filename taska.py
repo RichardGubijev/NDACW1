@@ -28,7 +28,7 @@ def parseWikiData(filepath):
     print(len(threadDictionary.keys()))
     return G
 
-def _helperFunc(userList, G: nx.graph):
+def _helperFunc(userList, G:nx.Graph):
     if len(userList) > 1:
             for i in range(0, len(userList) -1):
                 for x in range(i + 1, len(userList)):
