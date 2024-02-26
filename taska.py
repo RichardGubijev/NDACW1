@@ -7,13 +7,15 @@ def parseWikiData(filepath):
     #   [0]             [1]         [2]
     #   thread_subject  username    pagename
 
-    threadDictionary = {} #{pagename/thread: username, username}
+    threadDictionary = {}  #{pagename/thread: [user1, user2]}
 
     with open(filepath, "r", encoding="utf-8") as file:
         csv_reader = csv.reader(file, delimiter=',', quotechar='"')
         next(csv_reader) # Skip header line
         for row in csv_reader: 
-            key = f"{row[0]}/{row[2]}".replace("\n","")
+            # Mulitple threads might have the same thread_subject, 
+            # so to differinate them combine them with page name
+            key = f"{row[0]}/{row[2]}".replace("\n","") 
             if threadDictionary.get(key) is None:
                 threadDictionary[key] = [row[1]]
             else:
@@ -21,23 +23,20 @@ def parseWikiData(filepath):
 
     G = nx.Graph()
 
+    # For each thread in the dictionary, add all the permuations of relationships
+    # between the users. 
     for key in threadDictionary.keys():
         userList = threadDictionary.get(key)
-        G = _helperFunc(userList, G)
+        G = _add_all_perumations_of_relationships(userList, G)
         
     return G
 
 def ParseWikiDataWithThreadsLength(filepath):
-
-    # CSV FORMAT:
-    #   [0]             [1]         [2]
-    #   thread_subject  username    pagename
-
-    threadDictionary = {} #{pagename/thread: username, username}
-
+    # Same function as parseWikiData(), but also returns number of threads
+    threadDictionary = {} 
     with open(filepath, "r", encoding="utf-8") as file:
         csv_reader = csv.reader(file, delimiter=',', quotechar='"')
-        next(csv_reader) # Skip header line
+        next(csv_reader) 
         for row in csv_reader: 
             key = f"{row[0]}/{row[2]}".replace("\n","")
             if threadDictionary.get(key) is None:
@@ -49,17 +48,19 @@ def ParseWikiDataWithThreadsLength(filepath):
 
     for key in threadDictionary.keys():
         userList = threadDictionary.get(key)
-        G = _helperFunc(userList, G)
+        G = _add_all_perumations_of_relationships(userList, G)
         
     return G, len(threadDictionary.keys())
 
-def _helperFunc(userList, G):
+def _add_all_perumations_of_relationships(userList, G):
     if len(userList) > 1:
             for i in range(0, len(userList) -1):
-                for x in range(i + 1, len(userList)):
+                for x in range(i + 1, len(userList)): # Don't add I and I as a relationship
+                        # Networkx handles creating the nodes if they don't already exist, so add_edge is all that's needed to add the nodes. 
                         G.add_edge(userList[i], userList[x])
-    elif len(userList) == 1:
-         G.add_node(userList[0])
+    elif len(userList) == 1: 
+        # If list length is == 1, just add the node to the graph. Sometimes nodes don't have relationships to any other node.
+        G.add_node(userList[0])
     return G
 
 if __name__ == "__main__":
@@ -73,16 +74,18 @@ if __name__ == "__main__":
     average_time_to_run = []
     dataset_name = []
 
-    iterations = 10
+    iterations = 100
 
     relative_folder_path = 'datasets/'
     csv_filename = "task_a_runtime_preformance_stats.csv"
-    file_names = [f for f in os.listdir(relative_folder_path) if os.path.isfile(os.path.join(relative_folder_path, f)) and f.endswith(".csv")]
+    files = [f for f in os.listdir(relative_folder_path) if os.path.isfile(os.path.join(relative_folder_path, f)) and f.endswith(".csv")]
+    # Create a list of all files in "relative_folder_path" that end with CSV
 
     print(f"Generating statistics for datasets in '{relative_folder_path}'")
     print(f"Preforming {iterations} iteration(s)")
 
-    for file in file_names:
+    # Calculate the average runtime for parseWikiData() with all the datasets in the files folder. 
+    for file in files:
         total_time = 0.
         for i in range(0, iterations):
             start_time = time.time()
