@@ -29,7 +29,7 @@ def parseWikiData(filepath):
 
     return G
 
-def _helperFunc(userList, G: nx.graph):
+def _helperFunc(userList, G:nx.Graph):
     if len(userList) > 1:
             for i in range(0, len(userList) -1):
                 for x in range(i + 1, len(userList)):
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     G2time1 = time.time()
     G2 = parseWikiData(filepath=filepath2)
     G2time2 = time.time()
-    print(nx.is_isomorphic(G1, G2))
+    print(f'Are the two graphs isomorphic?: {nx.is_isomorphic(G1, G2)}')
     print(f"Time taken to parse CSV into a graph  {G1time2 - G1time1}")
     print(f"Time taken to parse CSV into a graph2 {G2time2 - G2time1}")
     nx.draw(G1, with_labels = False)
