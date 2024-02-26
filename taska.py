@@ -84,9 +84,7 @@ if __name__ == "__main__":
 
     for file in file_names:
         total_time = 0.
-
         for i in range(0, iterations):
-            print(f"iteration: {i}")
             start_time = time.time()
             G, number_of_threads = ParseWikiDataWithThreadsLength(relative_folder_path + file)
             end_time = time.time()
