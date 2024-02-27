@@ -42,7 +42,7 @@ def display_graph(graph: nx.Graph) -> None:
 
 def display_histogram(graph: nx.Graph) -> None:
     colors = [graph.nodes[node]['color'] for node in graph.nodes]
-    color_counts = {color: colors.count(color) for color in set(colors) if color != colours[0]}
+    color_counts = {color: colors.count(color) for color in set(colors) if color != colours[0] and color != colours[6]}
     color_labels = [colours_with_label[color] for color in color_counts.keys()]
     frequencies = list(color_counts.values())
     plt.xlabel("similarity range", fontsize=12, fontweight='bold')
