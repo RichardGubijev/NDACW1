@@ -42,7 +42,7 @@ def display_graph(graph: nx.Graph) -> None:
 
 def display_histogram(graph: nx.Graph) -> None:
     colors = [graph.nodes[node]['color'] for node in graph.nodes]
-    color_counts = {color: colors.count(color) for color in set(colors) if color != colours[0]}
+    color_counts = {color: colors.count(color) for color in set(colors) if color != colours[0] and color != colours[6]}
     color_labels = [colours_with_label[color] for color in color_counts.keys()]
     frequencies = list(color_counts.values())
     plt.xlabel("similarity range", fontsize=12, fontweight='bold')
@@ -80,3 +80,37 @@ def colour_count(graph: nx.graph) -> dict:
             else:
                 colour_dict[graph.nodes[node]['color']] += 1
     return colour_dict
+
+
+def plot_with_3_bars_per_bin(averages: dict,
+                             datasets: list,
+                             x_label: str,
+                             y_label: str,
+                             title: str):
+    colors = list(colours_with_label.values())[1:-1]
+
+    values_0 = list(averages[0].values())
+    values_1 = list(averages[1].values())
+    values_2 = list(averages[2].values())
+
+    fig, ax = plt.subplots(figsize=(15, 6))
+    bar_width = 0.25
+    index = range(len(colors))
+
+    bar1 = ax.bar(index, values_0, bar_width, color="red", label=f'{(datasets[0][:-4])}')
+    bar2 = ax.bar([i + bar_width for i in index], values_1, bar_width, color="green", label=f'{datasets[1][:-4]}')
+    bar3 = ax.bar([i + 2 * bar_width for i in index], values_2, bar_width, color="blue", label=f'{datasets[2][:-4]}')
+
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
+    ax.set_title(title)
+    ax.set_xticks([i + bar_width / 2 for i in index])
+    ax.set_xticklabels(colors)
+    ax.legend()
+
+    for bar in bar1 + bar2 + bar3:
+        height = bar.get_height()
+        ax.text(bar.get_x() + bar.get_width() / 2., 1.01 * height,
+                '%d' % int(height), ha='center', va='bottom')
+
+    plt.show()

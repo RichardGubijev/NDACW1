@@ -322,3 +322,4 @@ analysed_nodes.csv
 .idea/
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,python,pycharm,jupyternotebooks
 
+__pycache__/taska.cpython-312.pyc
